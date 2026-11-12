@@ -1,0 +1,53 @@
+\documentclass[11pt]{article}
+\usepackage[margin=0.8in]{geometry}
+\usepackage[T1]{fontenc}\usepackage{lmodern}\usepackage{booktabs}\usepackage{enumitem}
+\setlist{nosep,leftmargin=1.2em}\setlength{\parindent}{0pt}\setlength{\parskip}{4pt}
+\pagestyle{empty}
+\begin{document}
+{\Large\bfseries MEMORANDUM}\par\smallskip
+\begin{tabular}{@{}ll}
+\textbf{To:} & Chief Marketing Officer\\
+\textbf{From:} & teamId Analytics team\\
+\textbf{Date:} & 12 November 2026\\
+\textbf{Subject:} & Should we run a second campaign, and to whom?
+\end{tabular}\par\hrule\medskip
+
+\textbf{1. Recommendation.} Run the second campaign, but \textbf{only to the roughly 480 customers (about 21\% of the base) that our response model ranks highest}, not to everyone. (A \emph{response model} is a scoring rule, learned from the pilot, that estimates each customer's chance of accepting the offer.) Tested fairly on the pilot data --- each customer was scored by a version of the model that had never seen that customer --- this list would have earned about \textbf{+1,222 MU}, with a 95\% range of \textbf{965 to 1,477 MU}, instead of the \textbf{3,034 MU loss} the pilot made by contacting all 2,236 customers. It reaches 242 of the 334 customers who accepted (72\%) with 79\% fewer contacts. That is 4,256 MU better than contacting everyone and 1,349 MU better than contacting only the best segment (95\% range 1,136 to 1,573 MU). This is a look-back estimate on pilot results, not a guarantee.
+
+\begin{center}\small
+\begin{tabular}{lrrrr}
+\toprule
+Policy & Contacts & Acceptances & Profit (MU) & 95\% range (MU)\\
+\midrule
+Contact everyone & 2,236 & 334 & $-3{,}034$ & $-3{,}397$ to $-2{,}671$\\
+Contact nobody & 0 & 0 & 0 & ---\\
+Best segment only (cluster 1) & 530 & 133 & $-127$ & $-337$ to $+89$\\
+\textbf{Model-selected list (recommended)} & \textbf{480} & \textbf{242} & $\mathbf{+1{,}222}$ & $\mathbf{+965}$ \textbf{to} $\mathbf{+1{,}477}$\\
+\bottomrule
+\end{tabular}\end{center}
+
+\textbf{2. Why the pilot lost money.} Each contact costs 3 MU and each acceptance earns 11 MU, so a contact only pays off if the customer's chance of accepting is above 3/11, about 27\%. Only 14.94\% accepted (13.52\%--16.47\% with 95\% confidence), so each contact lost 1.36 MU on average. None of our four customer segments reaches 27\% on its own; the best one (25\%) still loses money. We must pick individual customers, not whole segments.
+
+\textbf{3. Whom to contact (personas).} The selected customers accepted at about 50\%, versus 5\% for everyone else. They come from three of our four personas:
+\begin{itemize}
+\item \textbf{Affluent Child-free Big Spenders} ($\approx$40\% of the list): high income, large wine/meat and catalogue purchases, recent buyers who have accepted offers before.
+\item \textbf{Loyal Multichannel Deal-Seekers} ($\approx$29\%): long-standing customers who buy regularly online and in store; the model picks those recently active.
+\item \textbf{Young Budget Browsers} ($\approx$24\%): only the engaged minority who bought recently and/or accepted an earlier campaign.
+\end{itemize}
+What they share: high spending (median 1,092 vs 270 MU), recent purchases (median 28 vs 55 days ago), longer tenure, and 57\% accepted an earlier campaign (vs 11\%). \textbf{New Budget Families} should almost never be contacted. Note that more than half of all acceptors (about 60\%, 201 of 334) were \emph{outside} the best segment --- which is why picking individuals beats picking a segment.
+
+\textbf{4. Key risks and assumptions.}
+\begin{itemize}
+\item We assume the offer, cost (3 MU), revenue (11 MU) and customer behaviour stay similar to the pilot. A new product or season can change response.
+\item The 95\% range reflects only random variation among customers; real uncertainty (e.g.\ refitting the model, changed behaviour) is wider. Expect a profit in the high hundreds to low thousands of MU, not an exact figure.
+\item Customer data must be taken as a snapshot \emph{before} sending, or the model would use information it won't have in practice.
+\item Some acceptors might have bought anyway (see 5), so the true \emph{extra} profit may be lower.
+\item The model should be refreshed after each campaign and the list checked before sending.
+\end{itemize}
+
+\textbf{5. ``Who responds'' is not ``who responds because we contacted them.''} Our model finds customers likely to say yes \emph{when contacted}. Some of them --- loyal big spenders --- might have bought anyway, so contacting them costs 3 MU for little extra revenue. What matters is the \emph{uplift}: how much the contact itself raises a customer's chance of buying. The pilot contacted everyone, so it cannot measure this. \textbf{Proposal:} in the next campaign, randomly set aside part of the selected list as a \textbf{hold-out group} that receives no contact. Because the split is random, the two groups are alike in every other way, so any difference in purchase rates is caused by the campaign. Incremental profit $=$ 11 MU $\times$ (purchase rate of contacted $-$ purchase rate of hold-out) $\times$ number contacted $-$ 3 MU $\times$ number contacted. This data will also let us build an \emph{uplift model} that targets customers whose behaviour the campaign actually changes.
+
+\textbf{6. Ethics and privacy.} Selecting customers by marital status or age can feel intrusive, may unfairly exclude groups (for example widowed or older customers) from offers and discounts, and may not be a permitted use of data collected for another purpose. \textbf{Mitigation:} build the list mainly from \emph{purchase behaviour} (spending, recency, past responses), which carries most of the signal, and drop marital status and age. We tested this: a model without them earns about 33 MU less (1,189 vs 1,222 MU), a difference indistinguishable from zero (95\% range $-156$ to $+90$ MU), and it removes most of the gap in who gets selected (e.g.\ singles 34\%$\to$17\%, widowed 35\%$\to$20\% selected), so \textbf{we recommend dropping both}. Also check each list for unusual exclusion of age or marital-status groups before sending; respect opt-outs and consent, and restrict access to personal attributes.
+
+\textbf{Decision requested:} approve a targeted second campaign to the model-selected list ($\sim$480 customers), with a randomized hold-out group to measure its true incremental profit.
+\end{document}

@@ -1,0 +1,27 @@
+# Python environment and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# LaTeX build artefacts (the .tex sources and final PDFs are kept)
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# Page previews rendered from the memo PDF
+SECTION-3/memo/pg-*.png
+
+# Old figure extracts, not referenced by the report
+SECTION-1/report/figs/
+
+# Editor / OS files
+.vscode/
+.idea/
+.DS_Store
+*.swp
