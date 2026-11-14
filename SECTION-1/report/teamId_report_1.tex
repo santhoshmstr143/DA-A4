@@ -122,7 +122,7 @@ python teamId_classifier_ova.py <path_to_test_file>   # writes ova.csv
 python teamId_classifier_ova.py <path_to_test_file> --retune   # redo grid search
 \end{lstlisting}
 Each script loads \texttt{Customer\_train.csv} from its own directory, reads the cached
-hyperparameters (\texttt{ovo\_best\_params.json} / \texttt{ova\_best\_params.json}; \texttt{--retune}
+hyperparameters (\texttt{ovo\_best\_params.json} / \texttt{ova\_best\_params.json}; \texttt{-{}-retune}
 reruns the full grid search and rewrites the grid CSV), fits the pipeline on all training rows and
 writes a single column \texttt{predicted}, one row per test row in input order. For the 789 test
 customers the predicted counts are: OvO A 168, B 215, C 202, D 204; OvA A 217, B 197, C 172, D 203.
@@ -141,9 +141,13 @@ folds (population std, \texttt{np.std}) for every configuration; the selected ro
 \textbf{Both decompositions select} kernel = RBF, $C=1$, $\gamma=0.1$, \texttt{class\_weight =
 balanced}: OvO macro-F1 $0.3113\pm0.0304$ (accuracy $0.3156\pm0.0299$), OvA macro-F1
 $0.3143\pm0.0306$ (accuracy $0.3188\pm0.0316$).
-The spread across the grid is small relative to the fold std, which already shows that the signal
-in the data is weak. Unweighted configurations often have slightly higher accuracy but lower
-macro-F1, because they predict the large segments A and D more often.
+Across the whole grid macro-F1 varies widely (0.144--0.311 for OvO, 0.247--0.314 for OvA; fold std
+0.002--0.044), so the hyperparameters do matter. The \emph{top} of the grid, however, is crowded:
+10 of the 30 OvO and 19 of the 30 OvA configurations lie within one fold-std of the best, so the
+choice among them is not sharply determined. For example, the best unweighted OvA (RBF, $C=1$,
+$\gamma=0.01$) reaches $0.3116\pm0.0171$, with the highest accuracy in the OvA grid (0.3406).
+Unweighted configurations generally have higher accuracy but lower macro-F1, because they predict the
+large segments A and D more often.
 
 {\small
 \setlength{\tabcolsep}{5pt}
@@ -264,9 +268,10 @@ at 0.293--0.325: deep trees fit noise in their bootstrap sample and averaging on
 \item \textbf{Accuracy vs.\ macro-F1 move in opposite directions.} Shallow forests obtain their accuracy by
 predicting mostly A and D (macro-F1 0.213--0.236 at depth 4), whereas unrestricted forests predict
 all four segments (macro-F1 0.282--0.311).
-\item \textbf{OOB vs.\ CV.} OOB tracks CV closely (chosen model: OOB 0.3161 vs.\ CV 0.3254) and is
-noisier at small $n$, where each row is out-of-bag for only a few trees (each tree leaves out
-about 36.8\% of rows).
+\item \textbf{OOB vs.\ CV.} OOB tracks CV closely but sits slightly below it (chosen model: OOB 0.3161
+vs.\ CV 0.3254). Each tree leaves out about 36.8\% of the rows, so every row's OOB prediction is a vote
+of only $\approx$37\% of the trees, a smaller and weaker forest than the full one. This makes OOB slightly
+pessimistic, most visibly at small $n$, where a row is out-of-bag for very few trees.
 \end{itemize}
 
 \paragraph{Chosen configuration.} Selecting by CV macro-F1 (ties to fewer trees), the same criterion as
@@ -334,9 +339,10 @@ Work\_Experience & $-0.0081\pm0.0129$ & $-0.0030\pm0.0124$ \\
 \end{tabular}
 \end{table}
 
-\paragraph{Which attributes drive the segmentation?} \textbf{Age} is the only attribute with a reasonably
-clear effect (accuracy drop 0.027, macro-F1 drop 0.040, about 1.5 and 2 std above zero).
-Family\_Size and Gender follow but lie within 1--1.5 std of zero; Ever\_Married, Profession and
+\paragraph{Which attributes drive the segmentation?} \textbf{Age} and \textbf{Family\_Size} are the only
+two attributes whose mean $\pm1$ std accuracy drop excludes zero: Age $0.027\pm0.018$ (1.47 std; macro-F1
+drop $0.040\pm0.019$) and Family\_Size $0.016\pm0.013$ (1.27 std). Gender follows (0.77 std in accuracy,
+although its macro-F1 drop of $0.023\pm0.015$ is larger); Ever\_Married, Profession and
 Spending\_Score are inside the noise, and Var\_1, Graduated and Work\_Experience have negative mean
 drops (no usable signal). The std reflects only the shuffles of one hold-out set, so it understates
 the true uncertainty, and the ranking below the top two or three would likely change with another split.
@@ -358,7 +364,7 @@ Because hyperparameters were chosen on these folds, the CV numbers carry a small
 CV would remove it).
 
 \begin{table}[H]\centering\small
-\caption{Overall comparison on identical 5-fold CV splits.}\label{tab:overall}
+\caption{Overall comparison on identical 5-fold CV splits. The mean $\pm$ std columns average the five per-fold scores; the OOF columns are computed once on the pooled out-of-fold predictions of all 1{,}838 rows.}\label{tab:overall}
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{@{}lccccc@{}}
 \toprule
@@ -377,7 +383,7 @@ toward the frequent classes; when the features are weak, as here, this pull domi
 classes are rarely predicted. Accuracy then looks acceptable while minority recall collapses. The RF
 sweep shows it: the forest with the best CV accuracy (depth 8, $n=200$, 0.351) rarely predicts B or C
 (recall 0.110 and 0.038),\footnote{Out-of-fold recalls of the depth-8 and depth-4 forests ($n=200$, same
-folds), computed with the notebook's \texttt{make\_rf\_pipeline}. The depth-4 forest, which ties at 0.351
+folds), printed by the cell after the imbalance experiment in \texttt{teamId\_task3\_analysis.ipynb}. The depth-4 forest, which ties at 0.351
 accuracy, never predicts B or C at all (recall A 0.741, B 0, C 0, D 0.393; macro-F1 0.216).} whereas the macro-F1-selected forest has accuracy 0.325 but recall A 0.376,
 B 0.248, C 0.234, D 0.380.
 
@@ -415,9 +421,12 @@ Without weights both decompositions under-predict the minority classes (true sha
 C 17.4\%). Contrary to the theoretical expectation, the unweighted \emph{OvO} is the more skewed one
 here: it predicts C for only 7.9\% of rows (recall 0.131, macro-F1 0.286), whereas unweighted OvA
 predicts C for 13.2\% (recall 0.209, macro-F1 0.301). The decomposition argument is therefore at
-most a tendency on this data. Balanced weights help both: B and C recall rise by 0.09--0.22 and
-macro-F1 by 0.013 (OvA) and 0.026 (OvO), at a cost of less than 0.01 in accuracy. This supports the
-claim that re-weighting mitigates imbalance at almost no accuracy cost.
+most a tendency on this data. The clear effect of balanced weights is a \emph{shift in recall}: B and C
+recall rise by 0.09--0.22 while A recall falls (OvO 0.474$\to$0.250, OvA 0.388$\to$0.284), at a cost of
+less than 0.01 in accuracy. The macro-F1 gain is smaller and less certain: a paired bootstrap over rows
+(2{,}000 resamples, Task-3 notebook) gives OvA $+0.0130$ [95\% CI $-0.0060$, $+0.0322$], which is
+\emph{not} significant, and OvO $+0.0253$ [$+0.0045$, $+0.0440$], which is. Re-weighting therefore reliably
+rebalances \emph{which} segments are predicted, and improves macro-F1 significantly only for OvO.
 
 \paragraph{Mitigation strategies, especially for small datasets.}
 \begin{itemize}
@@ -461,6 +470,10 @@ averaging helps less.
 \caption{OvA SVM, $C=1$, balanced; macro-F1 vs.\ $\gamma$.}\end{subfigure}\hfill
 \begin{subfigure}{0.49\textwidth}\includegraphics[width=\linewidth]{val_curve_maxdepth.png}
 \caption{Scratch RF, 100 trees; accuracy vs.\ max\_depth.}\end{subfigure}
+
+\medskip
+\begin{subfigure}{0.49\textwidth}\IfFileExists{../plots/val_curve_maxdepth_f1.png}{\includegraphics[width=\linewidth]{val_curve_maxdepth_f1.png}}{\fbox{\parbox[c][3cm][c]{0.9\linewidth}{\centering re-run teamId\_task3\_analysis.ipynb to create val\_curve\_maxdepth\_f1.png}}}
+\caption{Scratch RF, 100 trees; macro-F1 vs.\ max\_depth.}\end{subfigure}
 \caption{Validation curves (training vs.\ 5-fold CV score on the common folds).}\label{fig:vc}
 \end{figure}
 
@@ -499,9 +512,11 @@ None & 0.9852 & 0.3199 & 0.9844 & 0.3029 \\
 \end{table}
 
 \paragraph{Reading the curves.} For $\gamma$, training macro-F1 rises monotonically from 0.33 to 0.96,
-while CV macro-F1 peaks at $\gamma=0.1$ (0.314) and drops to 0.259 at $\gamma=10$. Left of the peak
-both scores are low and close (underfitting); right of it the train--CV gap grows to about 0.70
-(overfitting). The grid-search choice $\gamma=0.1$ sits exactly at the peak. For depth, training
+while CV macro-F1 peaks at $\gamma=0.1$ (0.314) and drops to 0.259 at $\gamma=10$. Right of the peak the
+train--CV gap grows to about 0.70: clear overfitting. Left of the peak there is \emph{no clear underfitting
+regime}: CV macro-F1 changes by only 0.026 between $\gamma=10^{-3}$ and $10^{-1}$, about one fold-std,
+although the train--CV gap does shrink (0.04 at $\gamma=10^{-3}$). The grid-search choice $\gamma=0.1$
+coincides with the CV peak, but this is partly circular, because both use the same folds. For depth, training
 accuracy climbs from 0.360 to 0.985 while CV accuracy stays near 0.35 up to depth 6 (0.354) and
 then declines to 0.320: classic overfitting by deep trees in accuracy terms. In macro-F1, however,
 deep trees are \emph{better} on CV (0.302--0.303 for depth $\ge12$ vs.\ 0.210--0.226 for depth $\le6$),
@@ -539,7 +554,7 @@ Weighted-F1 & \multicolumn{3}{c}{0.3178} & \multicolumn{3}{c}{0.3208} & \multico
 \paragraph{Most confused segments.} Counting errors in both directions, \textbf{A$\leftrightarrow$D} is the
 most confused pair for every model (278 OvO, 311 OvA, 384 RF), followed by \textbf{A$\leftrightarrow$B}
 (213, 220, 238). Third is A$\leftrightarrow$C for OvO (209) and B$\leftrightarrow$D for OvA (212) and
-RF (194). Segment A, the largest, appears in all top pairs: it overlaps with every other segment.
+RF (194). Segment A, the largest, is part of the two most confused pairs for every model.
 The three models are very close (macro-F1 0.311--0.314, accuracy 0.316--0.325). The RF is slightly
 better on A and D; the SVMs have higher recall on C (0.353 OvO, 0.303 OvA vs.\ 0.234 RF). B and C
 remain the hardest segments for all models (F1 0.26--0.29).
@@ -620,7 +635,7 @@ and a 200-tree forest of unrestricted depth. On identical folds the three models
 (accuracy 0.316--0.325, macro-F1 0.311--0.314); OvO and OvA do not differ significantly (McNemar
 $p=0.69$, bootstrap CI containing 0), and we prefer OvA for its simplicity and per-class scores.
 All models beat chance in macro-F1 (permutation $p=0.001$) but not the majority rule in accuracy
-(binomial $p=0.39$ for OvA). Only Age is clearly important. The available attributes explain little of
+(binomial $p=0.39$ for OvA). Only Age and Family\_Size have permutation importances clearly above zero. The available attributes explain little of
 the sales team's segmentation, so the predictions for the 789 new customers should be used as a weak
 prior and refined through direct contact and richer data.
 
