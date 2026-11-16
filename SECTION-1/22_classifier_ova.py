@@ -1,16 +1,16 @@
 """
-teamId_classifier_ova.py
+22_classifier_ova.py
 One-vs-All (one-vs-rest) multiclass classifier built from binary SVMs.
 
 Usage:
-    python teamId_classifier_ova.py <path_to_test_file> [--retune]
+    python 22_classifier_ova.py <path_to_test_file> [--retune]
 
 Output:
     ova.csv (single column `predicted`, one row per test row, same order)
 
 Design:
     - Same leak-free preprocessing Pipeline as the OvO script (imported from
-      teamId_classifier_ovo.py located next to this file): imputation,
+      22_classifier_ovo.py located next to this file): imputation,
       ordinal Spending_Score, one-hot nominals and scaling are fitted inside
       each CV fold and on the full training set for the final model.
     - K binary SVC models, model k trained on target (y == class_k) vs rest.
@@ -40,7 +40,7 @@ warnings.filterwarnings("ignore")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 _spec = importlib.util.spec_from_file_location(
-    "teamId_classifier_ovo", os.path.join(HERE, "teamId_classifier_ovo.py"))
+    "22_classifier_ovo", os.path.join(HERE, "22_classifier_ovo.py"))
 ovo = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(ovo)
 
@@ -104,7 +104,7 @@ def make_pipeline(**params):
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if len(args) != 1:
-        print("Usage: python teamId_classifier_ova.py <path_to_test_file> [--retune]")
+        print("Usage: python 22_classifier_ova.py <path_to_test_file> [--retune]")
         sys.exit(1)
     X, y = load_xy(TRAIN_FILE)
     params = ovo.get_best_params(X, y, make_pipeline, GRID_CSV, PARAMS_JSON,

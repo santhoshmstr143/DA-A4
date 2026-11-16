@@ -24,11 +24,11 @@
 \centering\vspace*{4cm}
 {\LARGE\bfseries Multiclass Classification of Customer Segments\par}\vspace{0.6cm}
 {\large Data Analytics 1 --- Assignment 4, Section 1\par}\vspace{0.4cm}
-{\large Team: teamId\par}\vspace{1.5cm}
+{\large Team: 22\par}\vspace{1.5cm}
 \begin{minipage}{0.8\textwidth}\small\raggedright
-Deliverables covered: \texttt{teamId\_classifier\_ovo.py}, \texttt{teamId\_classifier\_ova.py}
-(with \texttt{ovo.csv}, \texttt{ova.csv}), \texttt{teamId\_random\_forest.ipynb} (with \texttt{rf.csv}),
-\texttt{teamId\_task3\_analysis.ipynb}.
+Deliverables covered: \texttt{22\_classifier\_ovo.py}, \texttt{22\_classifier\_ova.py}
+(with \texttt{ovo.csv}, \texttt{ova.csv}), \texttt{22\_random\_forest.ipynb} (with \texttt{rf.csv}),
+\texttt{22\_task3\_analysis.ipynb}.
 All numbers in this report are taken from the grid-search CSV files, the cached parameter files and
 the stored outputs of the two notebooks.
 \end{minipage}
@@ -70,7 +70,7 @@ placed in a \texttt{Pipeline} together with the classifier. During cross-validat
 re-fitted on the training folds only, so medians, modes, categories and scaling statistics never see
 the validation rows; the final models are fitted on the full training file and only \emph{applied}
 to the test file. The random forest notebook imports the very same preprocessor from
-\texttt{teamId\_classifier\_ovo.py}. Scaling matters for the RBF/polynomial SVMs; it is harmless for
+\texttt{22\_classifier\_ovo.py}. Scaling matters for the RBF/polynomial SVMs; it is harmless for
 trees. Unseen test categories are encoded as all-zero one-hot vectors.
 
 \paragraph{Class distribution and imbalance.} The four segments are A 580 (31.6\%), D 547 (29.8\%),
@@ -84,7 +84,7 @@ selected by \emph{macro-F1} rather than accuracy, with accuracy reported alongsi
 \section{Task 1: One-vs-One and One-vs-All SVMs}
 %=====================================================================
 \subsection{(a) One-vs-one design}
-The class \texttt{OneVsOneSVM} in \texttt{teamId\_classifier\_ovo.py} trains
+The class \texttt{OneVsOneSVM} in \texttt{22\_classifier\_ovo.py} trains
 $\binom{4}{2}=6$ binary \texttt{sklearn.svm.SVC} models, one per pair $(a,b)$, each fitted only on
 the rows whose label is $a$ or $b$ (so every SVM sees a binary target). For a test point $x$ the
 pairwise SVM returns a signed margin $f_{ab}(x)$, positive in favour of $b$. Prediction:
@@ -103,7 +103,7 @@ final random draw treats all remaining candidates symmetrically, so no label is 
 favoured. Exact ties beyond step~2 are essentially impossible because the margins are continuous.
 
 \subsection{(b) One-vs-all design}
-\texttt{OneVsAllSVM} in \texttt{teamId\_classifier\_ova.py} trains $K=4$ binary SVCs, the
+\texttt{OneVsAllSVM} in \texttt{22\_classifier\_ova.py} trains $K=4$ binary SVCs, the
 $k$-th on all rows with target $\mathbb{1}[y=k]$. The predicted class is
 $\arg\max_k f_k(x)$ of the decision scores. Exact ties (detected with \texttt{np.isclose}) go to the
 larger training prior and then to a seeded random choice, again independent of label order.
@@ -117,9 +117,9 @@ positive class is the expected one, so votes and margins are attributed correctl
 
 \paragraph{How to run.} From \texttt{SECTION-1/}:
 \begin{lstlisting}
-python teamId_classifier_ovo.py <path_to_test_file>   # writes ovo.csv
-python teamId_classifier_ova.py <path_to_test_file>   # writes ova.csv
-python teamId_classifier_ova.py <path_to_test_file> --retune   # redo grid search
+python 22_classifier_ovo.py <path_to_test_file>   # writes ovo.csv
+python 22_classifier_ova.py <path_to_test_file>   # writes ova.csv
+python 22_classifier_ova.py <path_to_test_file> --retune   # redo grid search
 \end{lstlisting}
 Each script loads \texttt{Customer\_train.csv} from its own directory, reads the cached
 hyperparameters (\texttt{ovo\_best\_params.json} / \texttt{ova\_best\_params.json}; \texttt{-{}-retune}
@@ -180,7 +180,7 @@ Kernel & $C$ & $\gamma$ & Degree & Class weight & Macro-F1 & Accuracy \\
 \section{Task 2: Random Forest from Scratch}
 %=====================================================================
 \subsection{(a) Implementation}
-\texttt{ScratchRandomForest} (notebook \texttt{teamId\_random\_forest.ipynb}) implements:
+\texttt{ScratchRandomForest} (notebook \texttt{22\_random\_forest.ipynb}) implements:
 \begin{itemize}
 \item \textbf{Bootstrap sampling (own code):} for each tree, $n$ row indices are drawn with replacement
 (\texttt{rng.randint(0, n, n)}); the rows never drawn form that tree's out-of-bag set.
@@ -383,7 +383,7 @@ toward the frequent classes; when the features are weak, as here, this pull domi
 classes are rarely predicted. Accuracy then looks acceptable while minority recall collapses. The RF
 sweep shows it: the forest with the best CV accuracy (depth 8, $n=200$, 0.351) rarely predicts B or C
 (recall 0.110 and 0.038),\footnote{Out-of-fold recalls of the depth-8 and depth-4 forests ($n=200$, same
-folds), printed by the cell after the imbalance experiment in \texttt{teamId\_task3\_analysis.ipynb}. The depth-4 forest, which ties at 0.351
+folds), printed by the cell after the imbalance experiment in \texttt{22\_task3\_analysis.ipynb}. The depth-4 forest, which ties at 0.351
 accuracy, never predicts B or C at all (recall A 0.741, B 0, C 0, D 0.393; macro-F1 0.216).} whereas the macro-F1-selected forest has accuracy 0.325 but recall A 0.376,
 B 0.248, C 0.234, D 0.380.
 
@@ -472,7 +472,7 @@ averaging helps less.
 \caption{Scratch RF, 100 trees; accuracy vs.\ max\_depth.}\end{subfigure}
 
 \medskip
-\begin{subfigure}{0.49\textwidth}\IfFileExists{../plots/val_curve_maxdepth_f1.png}{\includegraphics[width=\linewidth]{val_curve_maxdepth_f1.png}}{\fbox{\parbox[c][3cm][c]{0.9\linewidth}{\centering re-run teamId\_task3\_analysis.ipynb to create val\_curve\_maxdepth\_f1.png}}}
+\begin{subfigure}{0.49\textwidth}\IfFileExists{../plots/val_curve_maxdepth_f1.png}{\includegraphics[width=\linewidth]{val_curve_maxdepth_f1.png}}{\fbox{\parbox[c][3cm][c]{0.9\linewidth}{\centering re-run 22\_task3\_analysis.ipynb to create val\_curve\_maxdepth\_f1.png}}}
 \caption{Scratch RF, 100 trees; macro-F1 vs.\ max\_depth.}\end{subfigure}
 \caption{Validation curves (training vs.\ 5-fold CV score on the common folds).}\label{fig:vc}
 \end{figure}

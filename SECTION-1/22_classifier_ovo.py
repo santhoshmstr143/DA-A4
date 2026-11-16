@@ -1,9 +1,9 @@
 """
-teamId_classifier_ovo.py
+22_classifier_ovo.py
 One-vs-One multiclass classifier built from binary SVMs.
 
 Usage:
-    python teamId_classifier_ovo.py <path_to_test_file> [--retune]
+    python 22_classifier_ovo.py <path_to_test_file> [--retune]
 
 Output:
     ovo.csv (single column `predicted`, one row per test row, same order)
@@ -223,7 +223,7 @@ def get_best_params(X, y, pipeline_fn, grid_csv, params_json, name, retune):
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if len(args) != 1:
-        print("Usage: python teamId_classifier_ovo.py <path_to_test_file> [--retune]")
+        print("Usage: python 22_classifier_ovo.py <path_to_test_file> [--retune]")
         sys.exit(1)
     X, y = load_xy(TRAIN_FILE)
     params = get_best_params(X, y, make_pipeline, GRID_CSV, PARAMS_JSON,
